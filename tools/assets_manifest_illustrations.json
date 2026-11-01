@@ -1,0 +1,556 @@
+{
+  "version": 1,
+  "description": "Starter crops for Kantongin Finance Illustration Asset Sheet-2.png. Adjust boxes after checking output.",
+  "assets": [
+    {
+      "name": "logo_horizontal",
+      "category": "branding",
+      "box": [
+        0.02,
+        0.02,
+        0.29,
+        0.13
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "mochi_main",
+      "category": "mascot",
+      "box": [
+        0.0,
+        0.15,
+        0.21,
+        0.49
+      ],
+      "remove_background": true
+    },
+    {
+      "name": "mochi_happy",
+      "category": "mascot",
+      "box": [
+        0.22,
+        0.15,
+        0.33,
+        0.32
+      ],
+      "remove_background": true
+    },
+    {
+      "name": "mochi_curious",
+      "category": "mascot",
+      "box": [
+        0.34,
+        0.15,
+        0.45,
+        0.32
+      ],
+      "remove_background": true
+    },
+    {
+      "name": "mochi_default",
+      "category": "mascot",
+      "box": [
+        0.46,
+        0.15,
+        0.57,
+        0.32
+      ],
+      "remove_background": true
+    },
+    {
+      "name": "mochi_sleep",
+      "category": "mascot",
+      "box": [
+        0.21,
+        0.34,
+        0.33,
+        0.5
+      ],
+      "remove_background": true
+    },
+    {
+      "name": "mochi_coin",
+      "category": "mascot",
+      "box": [
+        0.34,
+        0.34,
+        0.46,
+        0.5
+      ],
+      "remove_background": true
+    },
+    {
+      "name": "mochi_wink",
+      "category": "mascot",
+      "box": [
+        0.46,
+        0.34,
+        0.57,
+        0.5
+      ],
+      "remove_background": true
+    },
+    {
+      "name": "logo_app_icon",
+      "category": "branding",
+      "box": [
+        0.585,
+        0.04,
+        0.68,
+        0.2
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "logo_horizontal_card",
+      "category": "branding",
+      "box": [
+        0.685,
+        0.04,
+        0.89,
+        0.2
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "logo_mark",
+      "category": "branding",
+      "box": [
+        0.895,
+        0.04,
+        0.99,
+        0.2
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "splash_screen",
+      "category": "onboarding",
+      "box": [
+        0.58,
+        0.25,
+        0.69,
+        0.54
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "onboarding_wallet",
+      "category": "onboarding",
+      "box": [
+        0.69,
+        0.25,
+        0.8,
+        0.54
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "onboarding_goal",
+      "category": "onboarding",
+      "box": [
+        0.8,
+        0.25,
+        0.9,
+        0.54
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "onboarding_report",
+      "category": "onboarding",
+      "box": [
+        0.9,
+        0.25,
+        0.99,
+        0.54
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "empty_transactions",
+      "category": "empty_states",
+      "box": [
+        0.6,
+        0.61,
+        0.7,
+        0.78
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "empty_reports",
+      "category": "empty_states",
+      "box": [
+        0.7,
+        0.61,
+        0.8,
+        0.78
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "empty_settings",
+      "category": "empty_states",
+      "box": [
+        0.81,
+        0.61,
+        0.9,
+        0.78
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "empty_general",
+      "category": "empty_states",
+      "box": [
+        0.9,
+        0.61,
+        0.99,
+        0.78
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "background_cream",
+      "category": "backgrounds",
+      "box": [
+        0.02,
+        0.84,
+        0.12,
+        0.96
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "background_green",
+      "category": "backgrounds",
+      "box": [
+        0.13,
+        0.84,
+        0.23,
+        0.96
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "pattern_leaves",
+      "category": "backgrounds",
+      "box": [
+        0.24,
+        0.84,
+        0.35,
+        0.96
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "pattern_shapes",
+      "category": "backgrounds",
+      "box": [
+        0.36,
+        0.84,
+        0.46,
+        0.96
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "pattern_balance_card",
+      "category": "backgrounds",
+      "box": [
+        0.47,
+        0.84,
+        0.57,
+        0.96
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "illustration_leaf_left",
+      "category": "illustrations",
+      "box": [
+        0.6,
+        0.84,
+        0.69,
+        0.98
+      ],
+      "remove_background": true
+    },
+    {
+      "name": "illustration_leaf_right",
+      "category": "illustrations",
+      "box": [
+        0.69,
+        0.84,
+        0.76,
+        0.98
+      ],
+      "remove_background": true
+    },
+    {
+      "name": "illustration_sparkles",
+      "category": "illustrations",
+      "box": [
+        0.76,
+        0.84,
+        0.8,
+        0.98
+      ],
+      "remove_background": true
+    },
+    {
+      "name": "illustration_coins",
+      "category": "illustrations",
+      "box": [
+        0.79,
+        0.84,
+        0.86,
+        0.98
+      ],
+      "remove_background": true
+    },
+    {
+      "name": "illustration_wallet",
+      "category": "illustrations",
+      "box": [
+        0.86,
+        0.84,
+        0.93,
+        0.98
+      ],
+      "remove_background": true
+    },
+    {
+      "name": "illustration_plant",
+      "category": "illustrations",
+      "box": [
+        0.93,
+        0.84,
+        0.99,
+        0.98
+      ],
+      "remove_background": true
+    },
+    {
+      "name": "icon_kebutuhan",
+      "category": "icons",
+      "box": [
+        0.02,
+        0.56,
+        0.075,
+        0.66
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "icon_transportasi",
+      "category": "icons",
+      "box": [
+        0.075,
+        0.56,
+        0.13,
+        0.66
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "icon_nongkrong",
+      "category": "icons",
+      "box": [
+        0.13,
+        0.56,
+        0.185,
+        0.66
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "icon_tabungan",
+      "category": "icons",
+      "box": [
+        0.19,
+        0.56,
+        0.245,
+        0.66
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "icon_belanja",
+      "category": "icons",
+      "box": [
+        0.25,
+        0.56,
+        0.305,
+        0.66
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "icon_hiburan",
+      "category": "icons",
+      "box": [
+        0.31,
+        0.56,
+        0.365,
+        0.66
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "icon_kesehatan",
+      "category": "icons",
+      "box": [
+        0.37,
+        0.56,
+        0.425,
+        0.66
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "icon_pendidikan",
+      "category": "icons",
+      "box": [
+        0.43,
+        0.56,
+        0.485,
+        0.66
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "icon_tagihan",
+      "category": "icons",
+      "box": [
+        0.49,
+        0.56,
+        0.545,
+        0.66
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "icon_lainnya",
+      "category": "icons",
+      "box": [
+        0.55,
+        0.56,
+        0.605,
+        0.66
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "nav_home",
+      "category": "icons",
+      "box": [
+        0.02,
+        0.7,
+        0.07,
+        0.81
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "nav_transactions",
+      "category": "icons",
+      "box": [
+        0.08,
+        0.7,
+        0.13,
+        0.81
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "nav_reports",
+      "category": "icons",
+      "box": [
+        0.14,
+        0.7,
+        0.19,
+        0.81
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "nav_more",
+      "category": "icons",
+      "box": [
+        0.2,
+        0.7,
+        0.25,
+        0.81
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "icon_add",
+      "category": "icons",
+      "box": [
+        0.26,
+        0.7,
+        0.31,
+        0.81
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "icon_edit",
+      "category": "icons",
+      "box": [
+        0.31,
+        0.7,
+        0.36,
+        0.81
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "icon_delete",
+      "category": "icons",
+      "box": [
+        0.37,
+        0.7,
+        0.42,
+        0.81
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "icon_settings",
+      "category": "icons",
+      "box": [
+        0.43,
+        0.7,
+        0.48,
+        0.81
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "icon_notification",
+      "category": "icons",
+      "box": [
+        0.49,
+        0.7,
+        0.54,
+        0.81
+      ],
+      "remove_background": false
+    },
+    {
+      "name": "icon_arrow_right",
+      "category": "icons",
+      "box": [
+        0.55,
+        0.7,
+        0.6,
+        0.81
+      ],
+      "remove_background": false
+    }
+  ]
+}
