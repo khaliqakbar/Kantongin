@@ -1,21 +1,23 @@
 import { useCallback, useState } from 'react';
-import { Platform, Pressable, Share, Switch, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, Share, Switch, View } from 'react-native';
+import { Text, TextInput } from '@/components/text';
 import { Image } from 'expo-image';
 import { router, useFocusEffect, type Href } from 'expo-router';
 import Constants from 'expo-constants';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useTheme } from '@/hooks/use-theme';
 import { useAppThemePreference } from '@/hooks/app-theme-provider';
-import { mochi } from '@/constants/mochi';
 import { AppIcon, type IconName } from '@/components/app-icon';
 import { ListRow, Panel, Screen, Segmented, styles } from '@/components/finance-ui';
 import { showMessage } from '@/utils/show-message';
 import { getAllTransactionsForExport, transactionsToCSV } from '@/database/analytics-repository';
-import { getProfilePhoto, getSoundEnabled, getUserName, saveProfilePhoto, saveSoundEnabled, saveUserName, type ThemePreference } from '@/database/preferences';
+import { getHapticsEnabled, getProfilePhoto, getSoundEnabled, getUserName, saveHapticsEnabled, saveProfilePhoto, saveSoundEnabled, saveUserName, type ThemePreference } from '@/database/preferences';
 import { resetAllBalances } from '@/database/repository';
-import { deleteProfilePhoto, pickProfilePhoto } from '@/utils/profile-photo';
+import { deleteProfilePhoto, pickProfilePhoto, profileImage } from '@/utils/profile-photo';
+import { AvatarPicker } from '@/components/avatar-picker';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive-action';
 import { configureSounds } from '@/utils/sound';
+import { configureHaptics, haptic } from '@/utils/haptics';
 
 const menu: { title: string; icon: IconName; href: Href }[] = [
   { title: 'Kantong', icon: 'wallet', href: '/wallets' },
@@ -29,8 +31,8 @@ const themeOptions: { value: ThemePreference; label: string }[] = [{ value: 'sys
 
 export default function MoreScreen() {
   const db = useSQLiteContext(), c = useTheme(), s = styles(c), { preference, setPreference } = useAppThemePreference();
-  const [exporting, setExporting] = useState(false); const [name, setName] = useState(''); const [draft, setDraft] = useState(''); const [editing, setEditing] = useState(false); const [soundOn, setSoundOn] = useState(true); const [photo, setPhoto] = useState<string | null>(null); const [picking, setPicking] = useState(false);
-  useFocusEffect(useCallback(() => { let active = true; getProfilePhoto(db).then((value) => { if (active) setPhoto(value); }).catch((error: unknown) => { if (__DEV__) console.error('[Kantongin] Load profile photo failed', error); }); getSoundEnabled(db).then((value) => { if (active) setSoundOn(value); }).catch((error: unknown) => { if (__DEV__) console.error('[Kantongin] Load sound preference failed', error); }); getUserName(db).then((value) => { if (active) setName(value); }).catch((error: unknown) => { if (__DEV__) console.error('[Kantongin] Load user name failed', error); }); return () => { active = false; }; }, [db]));
+  const [exporting, setExporting] = useState(false); const [name, setName] = useState(''); const [draft, setDraft] = useState(''); const [editing, setEditing] = useState(false); const [soundOn, setSoundOn] = useState(true); const [photo, setPhoto] = useState<string | null>(null); const [picking, setPicking] = useState(false); const [avatarOpen, setAvatarOpen] = useState(false); const [hapticsOn, setHapticsOn] = useState(true);
+  useFocusEffect(useCallback(() => { let active = true; getProfilePhoto(db).then((value) => { if (active) setPhoto(value); }).catch((error: unknown) => { if (__DEV__) console.error('[Kantongin] Load profile photo failed', error); }); getHapticsEnabled(db).then((value) => { if (active) setHapticsOn(value); }).catch((error: unknown) => { if (__DEV__) console.error('[Kantongin] Load haptics preference failed', error); }); getSoundEnabled(db).then((value) => { if (active) setSoundOn(value); }).catch((error: unknown) => { if (__DEV__) console.error('[Kantongin] Load sound preference failed', error); }); getUserName(db).then((value) => { if (active) setName(value); }).catch((error: unknown) => { if (__DEV__) console.error('[Kantongin] Load user name failed', error); }); return () => { active = false; }; }, [db]));
   const saveName = async () => {
     try { await saveUserName(db, draft); setName(draft.trim()); setEditing(false); }
     catch (error) { if (__DEV__) console.error('[Kantongin] Save user name failed', error); showMessage('Nama belum tersimpan', 'Coba kembali.'); }
@@ -46,8 +48,14 @@ export default function MoreScreen() {
     } catch (error) { if (__DEV__) console.error('[Kantongin] Export transactions failed', error); showMessage('Ekspor gagal', error instanceof Error ? error.message : 'Terjadi kesalahan saat menyiapkan ekspor.'); }
     finally { setExporting(false); }
   };
+  const avatar = profileImage(photo);
+  const chooseAvatar = async (value: string) => {
+    setAvatarOpen(false);
+    try { await saveProfilePhoto(db, value); deleteProfilePhoto(photo); setPhoto(value); }
+    catch (error) { if (__DEV__) console.error('[Kantongin] Save avatar failed', error); showMessage('Avatar belum tersimpan', 'Coba kembali.'); }
+  };
   const choosePhoto = async () => {
-    if (picking) return; setPicking(true);
+    if (picking) return; setPicking(true); setAvatarOpen(false);
     try {
       const uri = await pickProfilePhoto();
       if (!uri) return;
@@ -73,16 +81,21 @@ export default function MoreScreen() {
     try { await saveSoundEnabled(db, on); configureSounds(on); }
     catch (error) { if (__DEV__) console.error('[Kantongin] Save sound preference failed', error); setSoundOn(!on); showMessage('Pengaturan suara belum tersimpan', 'Coba kembali.'); }
   };
+  const toggleHaptics = async (on: boolean) => {
+    setHapticsOn(on);
+    try { await saveHapticsEnabled(db, on); configureHaptics(on); if (on) haptic('tap'); }
+    catch (error) { if (__DEV__) console.error('[Kantongin] Save haptics preference failed', error); setHapticsOn(!on); showMessage('Pengaturan getar belum tersimpan', 'Coba kembali.'); }
+  };
   const changeTheme = async (value: ThemePreference) => { try { await setPreference(value); } catch (error) { if (__DEV__) console.error('[Kantongin] Save theme preference failed', error); showMessage('Tema belum tersimpan', 'Coba kembali.'); } };
 
   return <Screen title="Profil" tabBar>
     <Panel style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 14 }}>
-      <Pressable onPress={choosePhoto} disabled={picking} accessibilityRole="button" accessibilityLabel={photo ? 'Ganti foto profil' : 'Pilih foto profil'} style={{ alignItems: 'center', gap: 6 }}>
+      <Pressable onPress={() => setAvatarOpen(true)} disabled={picking} accessibilityRole="button" accessibilityLabel="Ganti avatar profil" style={{ alignItems: 'center', gap: 6 }}>
         <View>
-          <Image source={photo ? { uri: photo } : mochi.avatar} style={{ width: 66, height: 66, borderRadius: 33 }} contentFit={photo ? 'cover' : 'contain'} accessibilityLabel={photo ? 'Foto profil' : 'Avatar Mochi'} />
-          <View style={{ position: 'absolute', right: -2, bottom: -2, width: 26, height: 26, borderRadius: 13, backgroundColor: c.forest, borderWidth: 2, borderColor: c.surface, alignItems: 'center', justifyContent: 'center' }}><AppIcon name="camera" size={14} color={c.onForest} /></View>
+          <Image source={avatar.source} style={{ width: 66, height: 66, borderRadius: 33 }} contentFit={avatar.isPhoto ? 'cover' : 'contain'} accessibilityLabel={avatar.isPhoto ? 'Foto profil' : 'Avatar Mochi'} />
+          <View style={{ position: 'absolute', right: -2, bottom: -2, width: 26, height: 26, borderRadius: 13, backgroundColor: c.forest, borderWidth: 2, borderColor: c.surface, alignItems: 'center', justifyContent: 'center' }}><AppIcon name="edit" size={14} color={c.onForest} /></View>
         </View>
-        {photo ? <Pressable onPress={removePhoto} accessibilityRole="button" hitSlop={6}><Text style={{ color: c.negative, fontSize: 11, fontWeight: '700' }}>Hapus foto</Text></Pressable> : null}
+        {avatar.isPhoto ? <Pressable onPress={removePhoto} accessibilityRole="button" hitSlop={6}><Text style={{ color: c.negative, fontSize: 11, fontWeight: '700' }}>Hapus foto</Text></Pressable> : null}
       </Pressable>
       {editing ? <View style={{ flex: 1, gap: 8 }}>
         <View style={s.inputBox}><TextInput value={draft} onChangeText={setDraft} autoFocus placeholder="Nama panggilan" placeholderTextColor={c.textSecondary} maxLength={40} onSubmitEditing={saveName} accessibilityLabel="Nama panggilan" style={s.input} /></View>
@@ -106,6 +119,10 @@ export default function MoreScreen() {
         <View style={{ flex: 1 }}><Text style={{ color: c.text, fontSize: 14, fontWeight: '700' }}>Efek Suara</Text><Text style={{ color: c.textSecondary, fontSize: 11, marginTop: 2 }}>Suara Mochi saat membuka aplikasi, menyimpan, dan menghapus</Text></View>
         <Switch value={soundOn} onValueChange={toggleSound} accessibilityLabel="Efek suara" trackColor={{ false: c.border, true: c.forest }} thumbColor="#FFFFFF" />
       </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1, borderTopColor: c.line, paddingTop: 12, marginTop: 12 }}>
+        <View style={{ flex: 1 }}><Text style={{ color: c.text, fontSize: 14, fontWeight: '700' }}>Getar</Text><Text style={{ color: c.textSecondary, fontSize: 11, marginTop: 2 }}>Getar halus saat menekan ＋, menyimpan, dan menghapus</Text></View>
+        <Switch value={hapticsOn} onValueChange={toggleHaptics} accessibilityLabel="Getar" trackColor={{ false: c.border, true: c.forest }} thumbColor="#FFFFFF" />
+      </View>
     </Panel>
 
     <Panel style={{ paddingVertical: 2, marginBottom: 14 }}>
@@ -113,7 +130,9 @@ export default function MoreScreen() {
     </Panel>
 
     <Panel style={{ paddingVertical: 2 }}>
+      <ListRow icon="help" title="Lihat Pengenalan Aplikasi" subtitle="Putar ulang layar pengenalan Kantongin" onPress={() => router.push({ pathname: '/onboarding', params: { replay: '1' } })} />
       <ListRow icon="info" title="Tentang Kantongin" subtitle="Uang Rapi, Hidup Lebih Pasti." trailing={<Text style={{ color: c.textSecondary, fontSize: 12 }}>v{Constants.expoConfig?.version ?? '1.0.0'}</Text>} last />
     </Panel>
+    {avatarOpen ? <AvatarPicker value={photo} onPickAvatar={chooseAvatar} onPickGallery={choosePhoto} onClose={() => setAvatarOpen(false)} /> : null}
   </Screen>;
 }

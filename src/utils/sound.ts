@@ -1,4 +1,5 @@
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
+import { haptic, type HapticKind } from '@/utils/haptics';
 
 const sources = {
   startup: require('../../assets/sounds/startup.wav'),
@@ -9,6 +10,9 @@ const sources = {
 } as const;
 
 export type SoundName = keyof typeof sources;
+
+// Each money or delete sound comes with a matching vibration (its own setting), so call sites stay one line.
+const hapticFor: Partial<Record<SoundName, HapticKind>> = { coin: 'success', pocket: 'success', celebration: 'success', delete: 'warning' };
 
 // One player per effect for the app's lifetime; effects are short and replayed often.
 const players: Partial<Record<SoundName, AudioPlayer>> = {};
@@ -36,6 +40,8 @@ function getPlayer(name: SoundName) {
 let audioModeSet = false;
 
 export async function playSound(name: SoundName) {
+  const kind = hapticFor[name];
+  if (kind) haptic(kind);
   await ready;
   if (!enabled) return;
   try {

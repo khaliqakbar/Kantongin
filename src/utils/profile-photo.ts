@@ -1,6 +1,19 @@
 import { Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { File, Paths } from 'expo-file-system';
+import type { ImageSource } from 'expo-image';
+import { mochi, mochiAvatars } from '@/constants/mochi';
+
+export const MochiAvatarPrefix = 'mochi-avatar:';
+
+/** The saved profile value (a photo URI or a chosen Mochi avatar) as an image source; the default Mochi when empty. */
+export function profileImage(value: string | null): { source: ImageSource | number; isPhoto: boolean } {
+  if (value?.startsWith(MochiAvatarPrefix)) {
+    const avatar = mochiAvatars.find((item) => item.id === value.slice(MochiAvatarPrefix.length));
+    return { source: avatar?.source ?? mochi.avatar, isPhoto: false };
+  }
+  return value ? { source: { uri: value }, isPhoto: true } : { source: mochi.avatar, isPhoto: false };
+}
 
 /**
  * Lets the user pick and square-crop a photo, then copies it into the app's document directory
@@ -20,7 +33,7 @@ export async function pickProfilePhoto(): Promise<string | null> {
 
 /** Removes a stored profile photo file; missing files and web data URIs are ignored. */
 export function deleteProfilePhoto(uri: string | null) {
-  if (!uri || Platform.OS === 'web') return;
+  if (!uri || Platform.OS === 'web' || uri.startsWith(MochiAvatarPrefix)) return;
   try {
     const file = new File(uri);
     if (file.exists) file.delete();

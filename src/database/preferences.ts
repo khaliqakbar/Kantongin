@@ -34,10 +34,27 @@ export async function saveSoundEnabled(db: SQLiteDatabase, enabled: boolean) {
   await db.runAsync("INSERT INTO app_settings(key,value) VALUES('sound_enabled',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", enabled ? '1' : '0');
 }
 
+export async function getHapticsEnabled(db: SQLiteDatabase) {
+  const result = await db.getFirstAsync<{ value: string }>("SELECT value FROM app_settings WHERE key='haptics_enabled'");
+  return result?.value !== '0';
+}
+export async function saveHapticsEnabled(db: SQLiteDatabase, enabled: boolean) {
+  await db.runAsync("INSERT INTO app_settings(key,value) VALUES('haptics_enabled',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", enabled ? '1' : '0');
+}
+
 export async function getProfilePhoto(db: SQLiteDatabase) {
   const result = await db.getFirstAsync<{ value: string }>("SELECT value FROM app_settings WHERE key='profile_photo'");
   return result?.value || null;
 }
 export async function saveProfilePhoto(db: SQLiteDatabase, uri: string | null) {
   await db.runAsync("INSERT INTO app_settings(key,value) VALUES('profile_photo',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", uri ?? '');
+}
+
+/** The highest streak level the user has already been congratulated for, so each celebration shows once. */
+export async function getStreakLevelSeen(db: SQLiteDatabase) {
+  const result = await db.getFirstAsync<{ value: string }>("SELECT value FROM app_settings WHERE key='streak_level_seen'");
+  return Number(result?.value) || 0;
+}
+export async function saveStreakLevelSeen(db: SQLiteDatabase, level: number) {
+  await db.runAsync("INSERT INTO app_settings(key,value) VALUES('streak_level_seen',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", String(level));
 }

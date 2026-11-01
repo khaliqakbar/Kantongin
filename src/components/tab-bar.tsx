@@ -1,11 +1,13 @@
 import { Tabs, TabList, TabTrigger, TabSlot, TabTriggerSlotProps, TabListProps } from 'expo-router/ui';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '@/components/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppTheme, MaxContentWidth } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { AppIcon, type IconName } from '@/components/app-icon';
+import { haptic } from '@/utils/haptics';
 
 /** Bottom navigation: four destinations with the add-transaction button in the middle. */
 export function AppTabBar() {
@@ -27,7 +29,7 @@ export function AppTabBar() {
 
 function AddAction() {
   const c = useTheme(); const s = createStyles(c);
-  return <Pressable onPress={() => router.push('/transaction-form')} style={({ pressed }) => [s.addSlot, pressed && s.pressed]} accessibilityRole="button" accessibilityLabel="Tambah transaksi">
+  return <Pressable onPress={() => { haptic('tap'); router.push('/transaction-form'); }} style={({ pressed }) => [s.addSlot, pressed && s.pressed]} accessibilityRole="button" accessibilityLabel="Tambah transaksi">
     <View style={s.addButton}><AppIcon name="add" size={28} color={c.onForest} /></View>
   </Pressable>;
 }

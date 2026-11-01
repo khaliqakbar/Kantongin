@@ -1,5 +1,8 @@
 import * as SplashScreen from 'expo-splash-screen';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useSQLiteContext } from 'expo-sqlite';
+import { getUserName } from '@/database/preferences';
+import { getRecordingStreak } from '@/database/analytics-repository';
 import { StyleSheet } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -14,6 +17,12 @@ const FADE_MS = 800;
 export function AnimatedSplashOverlay() {
   const [visible, setVisible] = useState(true);
   const [started, setStarted] = useState(false);
+  // A personal touch while loading: greet the user by name and show their recording streak.
+  const db = useSQLiteContext(); const [name, setName] = useState(''); const [streakDays, setStreakDays] = useState(0);
+  useEffect(() => {
+    Promise.all([getUserName(db), getRecordingStreak(db)]).then(([userName, streak]) => { setName(userName); setStreakDays(streak.days); })
+      .catch((error: unknown) => { if (__DEV__) console.error('[Kantongin] Could not load splash greeting', error); });
+  }, [db]);
   const opacity = useSharedValue(1);
   const fadeStyle = useAnimatedStyle(() => ({ opacity: opacity.get() }));
   const fadeOut = useCallback(() => {
@@ -26,7 +35,7 @@ export function AnimatedSplashOverlay() {
   return <Animated.View
     style={[styles.overlay, fadeStyle]}
     onLayout={() => { if (!started) SplashScreen.hideAsync().finally(() => { setStarted(true); void playSound('startup'); }); }}>
-    <BrandSplash loadingMs={started ? LOADING_MS : undefined} onLoaded={fadeOut} />
+    <BrandSplash loadingMs={started ? LOADING_MS : undefined} onLoaded={fadeOut} name={name} streakDays={streakDays} />
   </Animated.View>;
 }
 

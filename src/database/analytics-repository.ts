@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import type { Transaction } from './types';
+import { shiftDateISO, todayISO } from './format';
 export type ReportCategory = { category_id:number; name:string; icon:string; amount:number; count:number };
 export type ReportDay = { day:string; income:number; expense:number };
 export type FinanceReport = { period:string; income:number; expense:number; previousExpense:number; net:number; days:ReportDay[]; expensesByCategory:ReportCategory[]; transactions:Transaction[] };
@@ -16,6 +17,22 @@ export async function getFinanceReport(db:SQLiteDatabase,period:string):Promise<
   db.getAllAsync<Transaction>(`${select} WHERE t.transaction_date BETWEEN ? AND ? ORDER BY t.transaction_date DESC,t.id DESC`,start,end),
  ]);
  return{period,income:totals?.income??0,expense:totals?.expense??0,previousExpense:previousTotals?.expense??0,net:(totals?.income??0)-(totals?.expense??0),days,expensesByCategory,transactions};
+}
+export type DailyExpense = { date:string; amount:number };
+/** Expense total for each of the last `days` days up to today (oldest first), with empty days as 0. */
+export async function getRecentDailyExpenses(db:SQLiteDatabase,days=7):Promise<DailyExpense[]>{
+ const today=todayISO();const dates=Array.from({length:days},(_,i)=>shiftDateISO(today,i-days+1));
+ const rows=await db.getAllAsync<DailyExpense>("SELECT transaction_date AS date,COALESCE(SUM(amount),0) AS amount FROM transactions WHERE type='expense' AND transaction_date BETWEEN ? AND ? GROUP BY transaction_date",dates[0],today);
+ const byDate=new Map(rows.map(r=>[r.date,r.amount]));return dates.map(date=>({date,amount:byDate.get(date)??0}));
+}
+export type SpendingPace = { thisMonth:number; lastMonthSameDays:number };
+/** Month-to-date expense next to the same span of last month (1st up to today's day, clamped to that month's length). */
+export async function getSpendingPace(db:SQLiteDatabase):Promise<SpendingPace>{
+ const today=todayISO();const [y,m,d]=today.split('-').map(Number);const prev=new Date(y,m-2,1);const py=prev.getFullYear(),pm=prev.getMonth()+1;
+ const prevEnd=`${py}-${String(pm).padStart(2,'0')}-${String(Math.min(d,new Date(py,pm,0).getDate())).padStart(2,'0')}`;
+ const sum=(from:string,to:string)=>db.getFirstAsync<{total:number}>("SELECT COALESCE(SUM(amount),0) total FROM transactions WHERE type='expense' AND transaction_date BETWEEN ? AND ?",from,to);
+ const [now,before]=await Promise.all([sum(`${today.slice(0,7)}-01`,today),sum(`${prevEnd.slice(0,7)}-01`,prevEnd)]);
+ return{thisMonth:now?.total??0,lastMonthSameDays:before?.total??0};
 }
 export type Insight = { id:string; title:string; detail:string; tone:'positive'|'neutral'|'warning' };
 export async function getFinanceInsights(db:SQLiteDatabase,period:string):Promise<Insight[]>{
@@ -36,3 +53,21 @@ export async function getFinanceInsights(db:SQLiteDatabase,period:string):Promis
 }
 export async function getAllTransactionsForExport(db:SQLiteDatabase){return db.getAllAsync<Pick<Transaction,'transaction_date'|'type'|'category_name'|'wallet_name'|'amount'|'note'|'id'>>(`${select} ORDER BY t.transaction_date,t.id`);}
 export function transactionsToCSV(rows:Awaited<ReturnType<typeof getAllTransactionsForExport>>){const quote=(v:string|number)=>`"${String(v).replaceAll('"','""')}"`;const lines=[['ID','Tanggal','Jenis','Kategori','Kantong','Nominal (Rp)','Catatan'],...rows.map(r=>[r.id,r.transaction_date,r.type==='income'?'Pemasukan':'Pengeluaran',r.category_name,r.wallet_name,r.amount,r.note])];return'\uFEFF'+lines.map(row=>row.map(quote).join(',')).join('\r\n');}
+
+export type RecordingStreak = { days: number; recordedToday: boolean };
+
+/**
+ * Consecutive days on which the user recorded something (a transaction or a transfer), counted by when it was
+ * entered rather than its transaction date, so back-filling last week doesn't extend the streak. Recurring entries
+ * the app adds by itself don't count. A streak whose last day was yesterday is still alive until today ends.
+ */
+export async function getRecordingStreak(db: SQLiteDatabase): Promise<RecordingStreak> {
+  const rows = await db.getAllAsync<{ created_at: string }>(`SELECT created_at FROM transactions t WHERE NOT EXISTS (SELECT 1 FROM recurring_occurrences o WHERE o.transaction_id = t.id)
+    UNION ALL SELECT created_at FROM transfers`);
+  const localDay = (stamp: string) => { const d = new Date(stamp); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const recorded = new Set(rows.map((row) => localDay(row.created_at)));
+  const today = todayISO(); const recordedToday = recorded.has(today);
+  let day = recordedToday ? today : shiftDateISO(today, -1); let days = 0;
+  while (recorded.has(day)) { days++; day = shiftDateISO(day, -1); }
+  return { days, recordedToday };
+}

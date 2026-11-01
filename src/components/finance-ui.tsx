@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
-import { KeyboardAvoidingView, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
+import { KeyboardAvoidingView, Pressable, ScrollView, StatusBar, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Text, TextInput } from '@/components/text';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';

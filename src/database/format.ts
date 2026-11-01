@@ -1,5 +1,7 @@
 export const rupiah = (amount: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
 export const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+/** Moves a local YYYY-MM-DD date by whole days (negative goes back). */
+export const shiftDateISO = (iso: string, days: number) => { const [y, m, d] = iso.split('-').map(Number); const next = new Date(y, m - 1, d + days); return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`; };
 export const parseRupiah = (value: string) => Number(value.replace(/\D/g, '')) || 0;
 
 export function isValidISODate(value: string) {

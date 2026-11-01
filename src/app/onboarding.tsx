@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StatusBar, StyleSheet, View } from 'react-native';
+import { Text } from '@/components/text';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useTheme } from '@/hooks/use-theme';
@@ -18,7 +19,10 @@ const pages = [
 
 export default function OnboardingScreen() {
   const db = useSQLiteContext(); const c = useTheme(); const s = createStyles(c); const [step, setStep] = useState(0); const [saving, setSaving] = useState(false); const page = pages[step];
+  // Opened again from Pengaturan: onboarding is already done, so finishing just returns there.
+  const { replay } = useLocalSearchParams<{ replay?: string }>();
   const finish = async () => {
+    if (replay) { router.back(); return; }
     if (saving) return;
     setSaving(true);
     try { await completeOnboarding(db); router.replace('/home'); }

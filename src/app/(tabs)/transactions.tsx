@@ -1,16 +1,34 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Text, TextInput } from '@/components/text';
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { DateField } from '@/components/date-field';
 import { useTheme } from '@/hooks/use-theme';
 import { AppIcon, categoryIcon, walletIcon } from '@/components/app-icon';
 import { Choice, EmptyState, ListRow, Panel, Screen, Segmented, styles } from '@/components/finance-ui';
-import { getTransactions, getWallets } from '@/database/repository';
-import { formatDate, rupiah } from '@/database/format';
+import { deleteTransaction, getTransactions, getWallets } from '@/database/repository';
+import { formatDate, rupiah, shiftDateISO, todayISO } from '@/database/format';
+import { SwipeRow } from '@/components/swipe-row';
+import { confirmDestructiveAction } from '@/utils/confirm-destructive-action';
 import type { EntryType, Transaction, Wallet } from '@/database/types';
 
+// Swipe action colours stay fixed so the white labels read well in light and dark mode.
+const EditColor = '#2E9B5F';
+const DeleteColor = '#E2574C';
+
+/** "Hari ini", "Kemarin", or "Jumat, 30 Okt" (the year only when it is not this year). */
+function dayHeading(date: string) {
+  const today = todayISO();
+  if (date === today) return 'Hari ini';
+  if (date === shiftDateISO(today, -1)) return 'Kemarin';
+  const label = formatDate(date, { weekday: true });
+  return date.slice(0, 4) === today.slice(0, 4) ? label.replace(/ \d{4}$/, '') : label;
+}
+
 const typeOptions: { value: 'all' | EntryType; label: string }[] = [{ value: 'all', label: 'Semua' }, { value: 'income', label: 'Pemasukan' }, { value: 'expense', label: 'Pengeluaran' }];
+
+const dayExpense = (items: Transaction[]) => items.reduce((sum, item) => sum + (item.type === 'expense' ? item.amount : 0), 0);
 
 export default function TransactionsScreen() {
   const db = useSQLiteContext(); const c = useTheme(); const s = styles(c);
@@ -22,6 +40,7 @@ export default function TransactionsScreen() {
     Promise.all([getTransactions(db, { type: filter === 'all' ? undefined : filter, query, from: from || undefined, to: to || undefined, walletId }), getWallets(db)]).then(([t, w]) => { if (active) { setTransactions(t); setWallets(w); setLoadError(false); } }).catch((error: unknown) => { if (__DEV__) console.error('[Kantongin] Failed to load transactions or wallets', error); if (active) setLoadError(true); });
     return () => { active = false; };
   }, [db, filter, query, from, to, walletId]));
+  const remove = (item: Transaction) => confirmDestructiveAction('Hapus transaksi?', `${item.note || item.category_name} (${rupiah(item.amount)}) akan dihapus dan saldo kantong dihitung ulang.`, async () => { await deleteTransaction(db, item.id); setTransactions((rows) => rows.filter((row) => row.id !== item.id)); }, (error) => { if (__DEV__) console.error('[Kantongin] Failed to delete transaction', { id: item.id, error }); });
   const groups = transactions.reduce<Record<string, Transaction[]>>((all, item) => { (all[item.transaction_date] ??= []).push(item); return all; }, {});
   const activeFilters = (walletId ? 1 : 0) + (from ? 1 : 0) + (to ? 1 : 0);
   return <Screen title="Transaksi" tabBar>
@@ -38,10 +57,19 @@ export default function TransactionsScreen() {
       {activeFilters ? <Pressable onPress={() => { setWalletId(undefined); setFrom(''); setTo(''); }} accessibilityRole="button"><Text style={{ color: c.sageStrong, fontSize: 12, fontWeight: '700' }}>Hapus filter</Text></Pressable> : null}
     </Panel> : null}
     <Segmented options={typeOptions} value={filter} onChange={setFilter} />
+    {transactions.length ? <Text style={{ color: c.textSecondary, fontSize: 11, marginBottom: 12 }}>Tip: geser transaksi ke kiri untuk edit atau hapus.</Text> : null}
     {loadError ? <Panel><Text style={{ color: c.negative, textAlign: 'center', paddingVertical: 10 }}>Transaksi gagal dimuat. Periksa penyimpanan lokal, lalu coba ubah filter.</Text></Panel>
       : Object.keys(groups).length ? Object.entries(groups).map(([date, items]) => <View key={date} style={{ marginBottom: 14 }}>
-        <Text style={{ color: c.textSecondary, fontSize: 12, fontWeight: '700', marginBottom: 8 }}>{formatDate(date, { weekday: true })}</Text>
-        <Panel style={{ paddingVertical: 2, paddingHorizontal: 14 }}>{items.map((item, index) => <ListRow key={item.id} icon={categoryIcon(item.category_icon)} title={item.note || item.category_name} subtitle={`${item.category_name} · ${item.wallet_name}`} value={`${item.type === 'income' ? '+' : '-'}${rupiah(item.amount)}`} valueColor={item.type === 'income' ? c.positive : c.negative} onPress={() => router.push(`/transaction-detail/${item.id}`)} last={index === items.length - 1} />)}</Panel>
+        <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
+          <Text style={{ color: c.text, fontSize: 13, fontWeight: '800' }}>{dayHeading(date)}</Text>
+          {dayExpense(items) ? <Text style={{ color: c.textSecondary, fontSize: 11, fontWeight: '600' }}>Keluar {rupiah(dayExpense(items))}</Text> : null}
+        </View>
+        <Panel style={{ paddingVertical: 0, paddingHorizontal: 0, overflow: 'hidden' }}>{items.map((item, index) => <SwipeRow key={item.id} background={c.surface} actions={[
+          { label: 'Edit', icon: 'edit', color: EditColor, onPress: () => router.push({ pathname: '/transaction-form', params: { id: String(item.id) } }) },
+          { label: 'Hapus', icon: 'delete', color: DeleteColor, onPress: () => remove(item) },
+        ]}>
+          <View style={{ paddingHorizontal: 14 }}><ListRow icon={categoryIcon(item.category_icon)} title={item.note || item.category_name} subtitle={`${item.category_name} · ${item.wallet_name}`} value={`${item.type === 'income' ? '+' : '-'}${rupiah(item.amount)}`} valueColor={item.type === 'income' ? c.positive : c.negative} onPress={() => router.push(`/transaction-detail/${item.id}`)} accessibilityHint="Geser ke kiri untuk edit atau hapus" last={index === items.length - 1} /></View>
+        </SwipeRow>)}</Panel>
       </View>)
       : <Panel><EmptyState title={query || activeFilters || filter !== 'all' ? 'Tidak ada yang cocok' : 'Belum ada transaksi'} message={query || activeFilters || filter !== 'all' ? 'Coba ubah kata kunci atau filter.' : 'Tekan tombol + di bawah untuk mencatat transaksi pertamamu.'} /></Panel>}
   </Screen>;

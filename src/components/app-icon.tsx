@@ -1,3 +1,4 @@
+// Icons render with the icon font, so they use the plain native Text rather than the app-font wrapper.
 import { Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -47,6 +48,7 @@ export const icons = {
   camera: { glyph: 0xe412, tint: '#2E9B5F' }, // photo_camera
   reset: { glyph: 0xf053, tint: '#E2574C' }, // restart_alt
   scan: { glyph: 0xe5fa, tint: '#8A5CD1' }, // document_scanner
+  help: { glyph: 0xe887, tint: '#3D7BE0' }, // help
   // Category and wallet icons.
   food: { glyph: 0xe56c, tint: '#E2574C' }, // restaurant
   transport: { glyph: 0xe531, tint: '#3D7BE0' }, // directions_car
